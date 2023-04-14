@@ -24,6 +24,7 @@ public class Tabs extends Application {
     private TabPane tabPane;
 
     // Methode voor het starten van de applicatie
+    @Override
     public void start(Stage primaryStage) {
 
         this.primaryStage = primaryStage;
@@ -57,10 +58,36 @@ public class Tabs extends Application {
         primaryStage.show();
     }
 
-    // Methode voor het maken van het scherm voor het beheren van cursisten
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private BorderPane createStudentsContent() {
         BorderPane studentsPane = new BorderPane();
-        // Inhoud van het scherm voor het beheren van cursisten
+
+        TableView<Student> studentsTable = new TableView<>();
+        TableColumn<Student, Integer> idColumn = new TableColumn<>("ID");
+        TableColumn<Student, String> emailColumn = new TableColumn<>("Email");
+        TableColumn<Student, String> nameColumn = new TableColumn<>("Naam");
+        TableColumn<Student, String> birthDateColumn = new TableColumn<>("Geboortedatum");
+        TableColumn<Student, String> genderColumn = new TableColumn<>("Geslacht");
+        TableColumn<Student, String> cityColumn = new TableColumn<>("Stad");
+        TableColumn<Student, String> countryColumn = new TableColumn<>("Land");
+
+        TableColumn<Student, Integer>[] columns = new TableColumn[]{
+            idColumn, emailColumn, nameColumn, birthDateColumn, genderColumn, cityColumn, countryColumn
+        };
+
+        studentsTable.getColumns().addAll(columns);
+
+        HBox buttonsBox = new HBox();
+        Button addButton = new Button("Toevoegen");
+        Button updateButton = new Button("Bijwerken");
+        Button deleteButton = new Button("Verwijderen");
+
+        buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
+        buttonsBox.setSpacing(10);
+
+        studentsPane.setCenter(studentsTable);
+        studentsPane.setBottom(buttonsBox);
+
         return studentsPane;
     }
 
@@ -95,4 +122,3 @@ public class Tabs extends Application {
         launch(args);
     }
 }
-
