@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package codecadamy;
+package codecademy;
 
 import Start.Start;
 import javafx.application.Application;
