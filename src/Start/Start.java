@@ -5,7 +5,7 @@
  */
 package Start;
 
-import Login.LoginPage;
+import Tabs.Tabs;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.geometry.Pos;
@@ -35,11 +35,11 @@ public class Start extends Application {
         Button startButton = new Button("Start");
         startButton.setOnAction(event -> {
             // Maak een instantie van LoginPage
-            LoginPage loginPage = new LoginPage();
+            Tabs tabsPage = new Tabs();
 
             try {
                 // Open de login pagina
-                loginPage.start(new Stage());
+                tabsPage.start(new Stage());
 
                 // Sluit de huidige pagina
                 primaryStage.close();
@@ -67,4 +67,3 @@ public class Start extends Application {
     }
 
 }
-
