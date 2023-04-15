@@ -42,9 +42,73 @@ public class Tabs extends Application {
 
         // Toevoegen van tabbladen
         Tab studentsTab = new Tab("Cursisten");
+//probeerde bij elke tab de knoppen te zetten maar lukt niet echt 
+//        HBox buttonsBox = new HBox();
+//        Button addButton = new Button("Toevoegen");
+//        Button updateButton = new Button("Bijwerken");
+//        Button deleteButton = new Button("Verwijderen");
+//        buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
         Tab coursesTab = new Tab("Cursussen");
         Tab registrationsTab = new Tab("Inschrijvingen");
         Tab certificatesTab = new Tab("Certificaten");
+
+        //hard coded erin want er zijn maar dire dingen in de databse
+        //dus het maakt niet uit waar het vandaan komt want is toch altijd zelfde gegevens
+        //kan later aangepast worden zo nodig 
+        Tab topdrieWeb = new Tab("Top 3 Webcasts");
+        VBox tab1Content = new VBox();
+        tab1Content.setSpacing(10); // voeg tussenruimte toe tussen de labels
+        Label label1 = new Label("Title: Introduction to Machine Learning\n"
+                + "Description: In this webcast, we provide an overview of machine learning and its applications.\n"
+                + "Name speaker: John Smith\n"
+                + "Organization: Codecademy\n"
+                + "Duration: 45\n"
+                + "URL: 'https://www.youtube.com/watch?v=5DknTFbcGVM'");
+        label1.setPadding(new Insets(10));
+        ; // voeg padding toe rondom de tekst
+        Label label2 = new Label("Title: JavaScript for Beginners\n"
+                + "Description: In this webcast, we cover the basics of JavaScript programming language.\n"
+                + "Name speaker: Jane Doe\n"
+                + "Organization: Codecademy\n"
+                + "Duration: 30\n"
+                + "URL: 'https://www.youtube.com/watch?v=Qqx_wzMmFeA'");
+        label2.setPadding(new Insets(10));
+
+        Label label3 = new Label("Title: Data Visualization with Python\n"
+                + "Description: In this webcast, we explore data visualization techniques using Python programming language.\n"
+                + "Name speaker: Bob Johnson\n"
+                + "Organization: Codecademy\n"
+                + "Duration: 75\n"
+                + "URL: 'https://www.youtube.com/watch?v=uUOgQ2lJ6_I'");
+        label3.setPadding(new Insets(10));
+
+        tab1Content.getChildren().addAll(label1, label2, label3);
+        topdrieWeb.setContent(tab1Content);
+
+//        HBox buttonsBox = new HBox();
+//        Button addButtonA = new Button("Toevoegen");
+//        Button updateButtonA = new Button("Bijwerken");
+//        Button deleteButtonA = new Button("Verwijderen");
+//        buttonsBox.getChildren().addAll(addButtonA, updateButtonA, deleteButtonA);
+//        //  studentsPane.setBottom(buttonsBox);
+        // Tweede tab
+
+        Tab topdrieCert = new Tab("Top 3 certificaten");
+        VBox tab2Content = new VBox();
+        tab1Content.setSpacing(10); // voeg tussenruimte toe tussen de labels
+        Label label7 = new Label("De top 3 van cursussen met meest uitgegeven certificaten: ");
+        label7.setPadding(new Insets(10));
+        Label label4 = new Label("Certificaat nummer: 101");
+        label4.setPadding(new Insets(10));
+        ; // voeg padding toe rondom de tekst
+        Label label5 = new Label("Certificaat nummer: 102");
+        label5.setPadding(new Insets(10));
+
+        Label label6 = new Label("Certificaat nummer: 103");
+        label6.setPadding(new Insets(10));
+
+        tab2Content.getChildren().addAll(label7, label4, label5, label6);
+        topdrieCert.setContent(tab2Content);
 
         // Toevoegen van de inhoud van elke tabblad
         studentsTab.setContent(createStudentsContent());
@@ -52,8 +116,8 @@ public class Tabs extends Application {
         registrationsTab.setContent(createRegistrationsContent());
         certificatesTab.setContent(createCertificatesContent());
 
-        // Toevoegen van de tabbladen aan de tabPane
-        tabPane.getTabs().addAll(studentsTab, coursesTab, registrationsTab, certificatesTab);
+        // Toevoegen van de tabbladen aan de tabPane,heb de top 3 toegevoegd
+        tabPane.getTabs().addAll(studentsTab, coursesTab, registrationsTab, certificatesTab, topdrieWeb, topdrieCert);
 
         // Toevoegen van de tabPane aan het midden van het hoofdpaneel
         mainPane.setCenter(tabPane);
@@ -90,6 +154,9 @@ public class Tabs extends Application {
 
         HBox buttonsBox = new HBox();
         Button addButton = new Button("Toevoegen");
+        
+        //mooi kleurtje gegeven zodat het wat opvalt website voor de kleuren: https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html
+        addButton.setStyle("-fx-background-color: #00CED1");
         Button updateButton = new Button("Bijwerken");
         Button deleteButton = new Button("Verwijderen");
         buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
@@ -270,10 +337,5 @@ public class Tabs extends Application {
     @Override
     public void stop() {
 
-    }
-
-    // Start de applicatie
-    public static void main(String[] args) {
-        launch(args);
     }
 }
