@@ -10,16 +10,19 @@ package Tabs;
  * @author dashy
  */
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -72,19 +75,42 @@ public class Tabs extends Application {
         BorderPane studentsPane = new BorderPane();
 
         TableView<Student> studentsTable = new TableView<>();
-        TableColumn<Student, Integer> idColumn = new TableColumn<>("ID");
+        // Define the columns of the table
         TableColumn<Student, String> emailColumn = new TableColumn<>("Email");
+        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+
         TableColumn<Student, String> nameColumn = new TableColumn<>("Naam");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
         TableColumn<Student, String> birthDateColumn = new TableColumn<>("Geboortedatum");
+        birthDateColumn.setCellValueFactory(cellData -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            LocalDate birthDate = cellData.getValue().getBirthDate();
+            if (birthDate != null) {
+                String formattedDate = birthDate.format(formatter);
+                property.setValue(formattedDate);
+            } else {
+                property.setValue("");
+            }
+            return property;
+        });
+
         TableColumn<Student, String> genderColumn = new TableColumn<>("Geslacht");
+        genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
+
         TableColumn<Student, String> cityColumn = new TableColumn<>("Stad");
+        cityColumn.setCellValueFactory(new PropertyValueFactory<>("city"));
+
         TableColumn<Student, String> countryColumn = new TableColumn<>("Land");
+        countryColumn.setCellValueFactory(new PropertyValueFactory<>("country"));
 
-        TableColumn<Student, Integer>[] columns = new TableColumn[]{
-            idColumn, emailColumn, nameColumn, birthDateColumn, genderColumn, cityColumn, countryColumn
-        };
+        // Add the columns to the table
+        studentsTable.getColumns().addAll(emailColumn, nameColumn, birthDateColumn, genderColumn, cityColumn, countryColumn);
 
-        studentsTable.getColumns().addAll(columns);
+        studentsPane.setCenter(studentsTable);
+
         // Define selectedStudent variable
         Student selectedStudent = null;
 
@@ -96,7 +122,7 @@ public class Tabs extends Application {
         studentsPane.setBottom(buttonsBox);
 
         // Add event listener for adding a student
-        addButton.setOnAction(event -> {
+        addButton.setOnAction(e -> {
             // Show a dialog to get the student information
             Dialog<Student> dialog = new Dialog<>();
             dialog.setTitle("Student toevoegen");
@@ -116,9 +142,11 @@ public class Tabs extends Application {
             birthDateField.setPromptText("Geboortedatum");
             ComboBox<String> genderField = new ComboBox<>();
             genderField.getItems().addAll("Mannelijk", "Vrouwelijk", "Anders");
+
             if (selectedStudent != null) {
                 genderField.setValue(selectedStudent.getGender());
             }
+
             TextField cityField = new TextField();
             cityField.setPromptText("Stad");
             TextField countryField = new TextField();
@@ -155,7 +183,6 @@ public class Tabs extends Application {
                     return new Student(email, name, birthDate, gender, city, country);
                 }
                 return null;
-
             });
 
             Optional<Student> result = dialog.showAndWait();
@@ -165,11 +192,19 @@ public class Tabs extends Application {
                 // Add the new student to the table
                 studentsTable.getItems().add(student);
 
+                // Refresh the table view to display the new student
+                studentsTable.refresh();
+
                 // Print all students in the table
                 studentsTable.getItems().forEach(System.out::println);
+
                 // Print the new student
                 System.out.println(student);
+
+                // Scroll to the new row in the table
+                studentsTable.scrollTo(student);
             });
+
         });
 
         updateButton.setOnAction(event -> {
