@@ -9,14 +9,23 @@ package Tabs;
  *
  * @author dashy
  */
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class Tabs extends Application {
+
+    private List<Student> studentsList = new ArrayList<>();
 
     private Scene mainScene;
     private Stage primaryStage;
@@ -76,22 +85,167 @@ public class Tabs extends Application {
         };
 
         studentsTable.getColumns().addAll(columns);
+        // Define selectedStudent variable
+        Student selectedStudent = null;
 
         HBox buttonsBox = new HBox();
         Button addButton = new Button("Toevoegen");
         Button updateButton = new Button("Bijwerken");
         Button deleteButton = new Button("Verwijderen");
-
         buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
-        buttonsBox.setSpacing(10);
-
-        studentsPane.setCenter(studentsTable);
         studentsPane.setBottom(buttonsBox);
 
+        // Add event listener for adding a student
+        addButton.setOnAction(event -> {
+            // Show a dialog to get the student information
+            Dialog<Student> dialog = new Dialog<>();
+            dialog.setTitle("Student toevoegen");
+            dialog.setHeaderText("Voer de gegevens van de student in:");
+
+            // Create the dialog content
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField emailField = new TextField();
+            emailField.setPromptText("Email");
+            TextField nameField = new TextField();
+            nameField.setPromptText("Naam");
+            DatePicker birthDateField = new DatePicker();
+            birthDateField.setPromptText("Geboortedatum");
+            ComboBox<String> genderField = new ComboBox<>();
+            genderField.getItems().addAll("Mannelijk", "Vrouwelijk", "Anders");
+            if (selectedStudent != null) {
+                genderField.setValue(selectedStudent.getGender());
+            }
+            TextField cityField = new TextField();
+            cityField.setPromptText("Stad");
+            TextField countryField = new TextField();
+            countryField.setPromptText("Land");
+
+            grid.add(new Label("Email:"), 0, 0);
+            grid.add(emailField, 1, 0);
+            grid.add(new Label("Naam:"), 0, 1);
+            grid.add(nameField, 1, 1);
+            grid.add(new Label("Geboortedatum:"), 0, 2);
+            grid.add(birthDateField, 1, 2);
+            grid.add(new Label("Geslacht:"), 0, 3);
+            grid.add(genderField, 1, 3);
+            grid.add(new Label("Stad:"), 0, 4);
+            grid.add(cityField, 1, 4);
+            grid.add(new Label("Land:"), 0, 5);
+            grid.add(countryField, 1, 5);
+
+            dialog.getDialogPane().setContent(grid);
+
+            // Add the OK and Cancel buttons to the dialog
+            ButtonType okButtonType = new ButtonType("Toevoegen", ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+            // Convert the dialog result to a student object when the OK button is clicked
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == okButtonType) {
+                    String email = emailField.getText();
+                    String name = nameField.getText();
+                    LocalDate birthDate = birthDateField.getValue();
+                    String gender = genderField.getValue(); // fixed typo
+                    String city = cityField.getText();
+                    String country = countryField.getText();
+                    return new Student(email, name, birthDate, gender, city, country);
+                }
+                return null;
+
+            });
+
+            Optional<Student> result = dialog.showAndWait();
+            result.ifPresent(student -> {
+                // Add the new student to the list
+                studentsList.add(student);
+                // Add the new student to the table
+                studentsTable.getItems().add(student);
+
+                // Print all students in the table
+                studentsTable.getItems().forEach(System.out::println);
+                // Print the new student
+                System.out.println(student);
+            });
+        });
+
+        updateButton.setOnAction(event -> {
+            // Get the selected student from the table
+            Student updateSelectedStudent = studentsTable.getSelectionModel().getSelectedItem();
+            if (updateSelectedStudent == null) {
+                // No student selected, show an error message
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Fout");
+                alert.setHeaderText(null);
+                alert.setContentText("Er is geen student geselecteerd.");
+                alert.showAndWait();
+                return;
+            }
+            // Show a dialog to update the student information
+            Dialog<Student> dialog = new Dialog<>();
+            dialog.setTitle("Student bijwerken");
+            dialog.setHeaderText("Pas de gegevens van de student aan:");
+
+            // Create the dialog content
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField emailField = new TextField(updateSelectedStudent.getEmail());
+            emailField.setPromptText("Email");
+            TextField nameField = new TextField(updateSelectedStudent.getName());
+            nameField.setPromptText("Naam");
+            DatePicker birthDateField = new DatePicker(updateSelectedStudent.getBirthDate());
+            birthDateField.setPromptText("Geboortedatum");
+            ComboBox<String> genderField = new ComboBox<>();
+            genderField.getItems().addAll("Mannelijk", "Vrouwelijk", "Anders");
+            genderField.setValue(updateSelectedStudent.getGender());
+            TextField cityField = new TextField(updateSelectedStudent.getCity());
+            cityField.setPromptText("Stad");
+            TextField countryField = new TextField(updateSelectedStudent.getCountry());
+            countryField.setPromptText("Land");
+
+            grid.add(new Label("Email:"), 0, 0);
+            grid.add(emailField, 1, 0);
+            grid.add(new Label("Naam:"), 0, 1);
+            grid.add(nameField, 1, 1);
+            grid.add(new Label("Geboortedatum:"), 0, 2);
+            grid.add(birthDateField, 1, 2);
+            grid.add(new Label("Geslacht:"), 0, 3);
+            grid.add(genderField, 1, 3);
+            grid.add(new Label("Stad:"), 0, 4);
+            grid.add(cityField, 1, 4);
+            grid.add(new Label("Land:"), 0, 5);
+            grid.add(countryField, 1, 5);
+
+            dialog.getDialogPane().setContent(grid);
+
+            // Add the OK and Cancel buttons to the dialog
+            ButtonType okButtonType = new ButtonType("Bijwerken", ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+            // Convert the dialog result to a student object when the OK button is clicked
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == okButtonType) {
+                    String email = emailField.getText();
+                    String name = nameField.getText();
+                    LocalDate birthDate = birthDateField.getValue();
+                    String gender = genderField.getValue();
+                    String city = cityField.getText();
+                    String country = countryField.getText();
+                    return new Student(email, name, birthDate, gender, city, country);
+                }
+                return null;
+
+            });
+        });
         return studentsPane;
     }
 
-    // Methode voor het maken van het scherm voor het beheren van cursussen
     private BorderPane createCoursesContent() {
         BorderPane coursesPane = new BorderPane();
         // Inhoud van het scherm voor het beheren van cursussen
@@ -113,8 +267,9 @@ public class Tabs extends Application {
     }
 
     // Methode voor het afsluiten van de applicatie
+    @Override
     public void stop() {
-        // Afsluiten van de applicatie
+
     }
 
     // Start de applicatie
