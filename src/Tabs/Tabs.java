@@ -275,9 +275,54 @@ public class Tabs extends Application {
                     return new Student(email, name, birthDate, gender, city, country);
                 }
                 return null;
-
             });
+
+            Optional<Student> result = dialog.showAndWait();
+
+            if (result.isPresent()) {
+// Get the updated student information from the dialog result
+                Student updatedStudent = result.get();
+// Update the selected student in the table with the new information
+                updateSelectedStudent.setEmail(updatedStudent.getEmail());
+                updateSelectedStudent.setName(updatedStudent.getName());
+                updateSelectedStudent.setBirthDate(updatedStudent.getBirthDate());
+                updateSelectedStudent.setGender(updatedStudent.getGender());
+                updateSelectedStudent.setCity(updatedStudent.getCity());
+                updateSelectedStudent.setCountry(updatedStudent.getCountry());
+// Refresh the table to reflect the changes
+                studentsTable.refresh();
+            }
+
         });
+
+        deleteButton.setOnAction(event -> {
+            // Get the selected student from the table
+            Student selectedStudent = studentsTable.getSelectionModel().getSelectedItem();
+            if (selectedStudent == null) {
+                // No student selected, show an error message
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Fout");
+                alert.setHeaderText(null);
+                alert.setContentText("Er is geen student geselecteerd.");
+                alert.showAndWait();
+                return;
+            }
+            // Show a confirmation dialog before deleting the student
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Bevestig verwijdering");
+            alert.setHeaderText("Weet u zeker dat u de geselecteerde student wilt verwijderen?");
+            alert.setContentText(selectedStudent.getName() + " zal worden verwijderd.");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Remove the student from the list and table
+                studentsList.remove(selectedStudent);
+                studentsTable.getItems().remove(selectedStudent);
+                // Refresh the table to reflect the changes
+                studentsTable.refresh();
+            }
+        });
+
         return studentsPane;
     }
 
