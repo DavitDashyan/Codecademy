@@ -297,8 +297,8 @@ public class Tabs extends Application {
 
         deleteButton.setOnAction(event -> {
             // Get the selected student from the table
-            Student selectedStudent = studentsTable.getSelectionModel().getSelectedItem();
-            if (selectedStudent == null) {
+            Student deleteSelectedStudent = studentsTable.getSelectionModel().getSelectedItem();
+            if (deleteSelectedStudent == null) {
                 // No student selected, show an error message
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Fout");
@@ -311,7 +311,7 @@ public class Tabs extends Application {
             Alert alert = new Alert(AlertType.CONFIRMATION);
             alert.setTitle("Bevestig verwijdering");
             alert.setHeaderText("Weet u zeker dat u de geselecteerde student wilt verwijderen?");
-            alert.setContentText(selectedStudent.getName() + " zal worden verwijderd.");
+            alert.setContentText(deleteSelectedStudent.getName() + " zal worden verwijderd.");
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
