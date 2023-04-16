@@ -280,16 +280,16 @@ public class Tabs extends Application {
             Optional<Student> result = dialog.showAndWait();
 
             if (result.isPresent()) {
-// Get the updated student information from the dialog result
+                // Get the updated student information from the dialog result
                 Student updatedStudent = result.get();
-// Update the selected student in the table with the new information
+                // Update the selected student in the table with the new information
                 updateSelectedStudent.setEmail(updatedStudent.getEmail());
                 updateSelectedStudent.setName(updatedStudent.getName());
                 updateSelectedStudent.setBirthDate(updatedStudent.getBirthDate());
                 updateSelectedStudent.setGender(updatedStudent.getGender());
                 updateSelectedStudent.setCity(updatedStudent.getCity());
                 updateSelectedStudent.setCountry(updatedStudent.getCountry());
-// Refresh the table to reflect the changes
+                // Refresh the table to reflect the changes
                 studentsTable.refresh();
             }
 
