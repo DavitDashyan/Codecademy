@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -9,16 +10,14 @@ package Tabs;
  *
  * @author dashy
  */
+import Database.DbConnection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -27,74 +26,59 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.*;
 
 public class Tabs extends Application {
 
+    private DbConnection con = new DbConnection();
     private List<Student> studentsList = new ArrayList<>();
 
     private Scene mainScene;
     private Stage primaryStage;
     private BorderPane mainPane;
     private TabPane tabPane;
+    static int userId = 500;
+    static int addressId = 99;
 
     // Methode voor het starten van de applicatie
-    public class Tabs extends Application {
+    @Override
+    public void start(Stage primaryStage) {
 
-        private List<Student> studentsList = new ArrayList<>();
-        private ObservableList<Webcast> webcastsList = FXCollections.observableArrayList();
+        this.primaryStage = primaryStage;
+        mainPane = new BorderPane();
+        tabPane = new TabPane();
 
-        private Scene mainScene;
-        private Stage primaryStage;
-        private BorderPane mainPane;
-        private TabPane tabPane;
+        // Toevoegen van tabbladen
+        Tab studentsTab = new Tab("Cursisten");
+        Tab coursesTab = new Tab("Cursussen");
+        Tab registrationsTab = new Tab("Inschrijvingen");
+        Tab certificatesTab = new Tab("Certificaten");
 
-        // Methode voor het starten van de applicatie
-        @Override
-        public void start(Stage primaryStage) {
+        // Toevoegen van de inhoud van elke tabblad
+        studentsTab.setContent(createStudentsContent());
+        coursesTab.setContent(createCoursesContent());
+        registrationsTab.setContent(createRegistrationsContent());
+        certificatesTab.setContent(createCertificatesContent());
 
-            this.primaryStage = primaryStage;
-            mainPane = new BorderPane();
-            tabPane = new TabPane();
+        // Toevoegen van de tabbladen aan de tabPane
+        tabPane.getTabs().addAll(studentsTab, coursesTab, registrationsTab, certificatesTab);
 
-            // Toevoegen van tabbladen
-            Tab studentsTab = new Tab("Cursisten");
-            Tab coursesTab = new Tab("Cursussen");
-            Tab registrationsTab = new Tab("Inschrijvingen");
-            Tab certificatesTab = new Tab("Certificaten");
-            Tab topdrieWebTab = new Tab("Top 3 Webcasts");
+        // Toevoegen van de tabPane aan het midden van het hoofdpaneel
+        mainPane.setCenter(tabPane);
 
-            // Toevoegen van de inhoud van elke tabblad
-            studentsTab.setContent(createStudentsContent());
-            coursesTab.setContent(createCoursesContent());
-            registrationsTab.setContent(createRegistrationsContent());
-            certificatesTab.setContent(createCertificatesContent());
-            topdrieWebTab.setContent(createTopThreeWebcasts());
+        // Creëren van de hoofdscene
+        mainScene = new Scene(mainPane, 800, 600);
 
-            // Toevoegen van de tabbladen aan de tabPane
-            tabPane.getTabs().addAll(studentsTab, coursesTab, registrationsTab, certificatesTab, topdrieWebTab);
+        // Instellen van de titel en de scene voor het primaryStage
+        primaryStage.setTitle("Studentregistratie Applicatie");
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+    }
 
-            // Toevoegen van de tabPane aan het midden van het hoofdpaneel
-            mainPane.setCenter(tabPane);
-
-            // Creëren van de hoofdscene
-            mainScene = new Scene(mainPane, 800, 600);
-
-            // Instellen van de titel en de scene voor het primaryStage
-            primaryStage.setTitle("Studentregistratie Applicatie");
-            primaryStage.setScene(mainScene);
-            primaryStage.show();
-        }
-
-        private void showAlert(Alert.AlertType alertType, String title, String content) {
-            Alert alert = new Alert(alertType);
-            alert.setTitle(title);
-            alert.setHeaderText(null);
-            alert.setContentText(content);
-            alert.showAndWait();
-        }
-
-        @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private BorderPane createStudentsContent() {
         BorderPane studentsPane = new BorderPane();
 
@@ -144,6 +128,36 @@ public class Tabs extends Application {
         Button deleteButton = new Button("Verwijderen");
         buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
         studentsPane.setBottom(buttonsBox);
+
+        try {
+            con.connectToDb();
+            ResultSet res = con.getResult("SELECT * FROM student");
+
+            while (res.next()) {
+                int id = res.getInt("id");
+                String email = res.getString("email");
+                String name = res.getString("name");
+                Date dateofbirth = res.getDate("birth_date");
+                String gender = res.getString("gender");
+                String addres = res.getString("address_id");
+                //String postalcode = res.getString("postalcode");
+                String city = res.getString("city");
+                String country = res.getString("country");
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(dateofbirth);
+
+                int temp = cal.get(Calendar.MONTH);
+                //TableRow row = new TableRow();
+                LocalDate dateLoc = LocalDate.of(cal.get(Calendar.YEAR), 12, cal.get(Calendar.DAY_OF_MONTH));
+                // LocalDate dateLoc = dateofbirth.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                Student row = new Student(email, name, dateLoc, gender, addres, city, country);
+                studentsTable.getItems().add(row);
+
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex);
+        }
 
         // Add event listener for adding a student
         addButton.setOnAction(e -> {
@@ -204,7 +218,26 @@ public class Tabs extends Application {
                     String gender = genderField.getValue(); // fixed typo
                     String city = cityField.getText();
                     String country = countryField.getText();
-                    return new Student(email, name, birthDate, gender, city, country);
+                    addressId++;
+                    String addres = Integer.toString(addressId);
+                    userId++;
+
+                    String strUserId = Integer.toString(userId);
+                    try {
+                        String SQL = "INSERT INTO student ( id, email, name, birth_date, gender,address_id ,city, country) VALUES ('"
+                                + strUserId
+                                + "','"
+                                + email
+                                + "','"
+                                + name
+                                + "','" + birthDate + "','" + gender + "','" + addres + "','" + city + "','" + country + "')";
+                        con.execute(SQL);
+                    } catch (SQLException ex) {
+                        System.out.println(ex);
+                        return null;
+                    }
+
+                    return new Student(email, name, birthDate, gender, addres, city, country);
                 }
                 return null;
             });
@@ -296,7 +329,26 @@ public class Tabs extends Application {
                     String gender = genderField.getValue();
                     String city = cityField.getText();
                     String country = countryField.getText();
-                    return new Student(email, name, birthDate, gender, city, country);
+                    String addres = "";
+                    String strUserId = Integer.toString(updateSelectedStudent.getId());
+//                    try {
+//                        String SQL = "UPDATE student SET email =" + email +
+//                                ", name=" + name + 
+//                                ", birth_date=" + birthDate +
+//                                ", gender="+ gender +
+//                                ", address_id = " + addres +
+//                                ", city=" +city+
+//                                ", country =" + country+
+//                                " WHERE id =" + 
+//                                 strUserId
+//                                ;
+//                        con.execute(SQL);
+//                    } catch (SQLException ex) {
+//                        System.out.println(ex);
+//                        return null;
+//                    }
+                    
+                    return new Student(email, name, birthDate, gender, addres, city, country);
                 }
                 return null;
             });
@@ -304,16 +356,16 @@ public class Tabs extends Application {
             Optional<Student> result = dialog.showAndWait();
 
             if (result.isPresent()) {
-                // Get the updated student information from the dialog result
+// Get the updated student information from the dialog result
                 Student updatedStudent = result.get();
-                // Update the selected student in the table with the new information
+// Update the selected student in the table with the new information
                 updateSelectedStudent.setEmail(updatedStudent.getEmail());
                 updateSelectedStudent.setName(updatedStudent.getName());
                 updateSelectedStudent.setBirthDate(updatedStudent.getBirthDate());
                 updateSelectedStudent.setGender(updatedStudent.getGender());
                 updateSelectedStudent.setCity(updatedStudent.getCity());
                 updateSelectedStudent.setCountry(updatedStudent.getCountry());
-                // Refresh the table to reflect the changes
+// Refresh the table to reflect the changes
                 studentsTable.refresh();
             }
 
@@ -344,6 +396,15 @@ public class Tabs extends Application {
                 studentsTable.getItems().remove(selectedStudent);
                 // Refresh the table to reflect the changes
                 studentsTable.refresh();
+                
+//                    String strUserId = Integer.toString(deleteSelectedStudent.getId());
+//                    try {
+//                        String SQL = "Delete FROM student where id = " + strUserId;
+//                        con.execute(SQL);
+//                    } catch (SQLException ex) {
+//                        System.out.println(ex);
+//                        return null;
+//                    }
             }
         });
 
@@ -370,243 +431,10 @@ public class Tabs extends Application {
         return certificatesPane;
     }
 
-    private BorderPane createTopThreeWebcasts() {
-        BorderPane createTopThreeWebcastsPane = new BorderPane();
+    // Methode voor het afsluiten van de applicatie
+    @Override
+    public void stop() {
 
-        TableView<Webcast> webcastTable = new TableView<>();
-        // Define the columns of the table
-        TableColumn<Webcast, String> titleColumn = new TableColumn<>("Title");
-        titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
-
-        TableColumn<Webcast, String> descriptionColumn = new TableColumn<>("Description");
-        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
-
-        TableColumn<Webcast, String> speakerColumn = new TableColumn<>("Speaker");
-        speakerColumn.setCellValueFactory(new PropertyValueFactory<>("speakerName"));
-
-        TableColumn<Webcast, String> urlColumn = new TableColumn<>("URL");
-        urlColumn.setCellValueFactory(new PropertyValueFactory<>("url"));
-
-        webcastTable.getColumns().setAll(
-                Arrays.asList(
-                        titleColumn,
-                        descriptionColumn,
-                        speakerColumn,
-                        urlColumn
-                )
-        );
-
-        createTopThreeWebcastsPane.setCenter(webcastTable);
-
-        // Define selectedWebcast variable
-        Webcast selectedWebcast = null;
-
-        HBox buttonsBox = new HBox();
-        Button addButton = new Button("Toevoegen");
-        Button updateButton = new Button("Bijwerken");
-        Button deleteButton = new Button("Verwijderen");
-        buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
-        createTopThreeWebcastsPane.setBottom(buttonsBox);
-
-        // Add event listener for adding a webcast
-        addButton.setOnAction(e -> {
-            // Show a dialog to get the webcast information
-            Dialog<Webcast> dialog = new Dialog<>();
-            dialog.setTitle("Webcast toevoegen");
-            dialog.setHeaderText("Voer de gegevens van de webcast in:");
-
-            // Create the dialog
-            GridPane grid = new GridPane();
-            grid.setHgap(10);
-            grid.setVgap(10);
-            grid.setPadding(new Insets(20, 150, 10, 10));
-            TextField titleField = new TextField();
-            titleField.setPromptText("Title");
-            TextArea descriptionField = new TextArea();
-            descriptionField.setPromptText("Description");
-            TextField speakerNameField = new TextField();
-            speakerNameField.setPromptText("Speaker Name");
-            TextField organizationField = new TextField();
-            organizationField.setPromptText("Organization");
-            Spinner<Integer> durationField = new Spinner<>(0, Integer.MAX_VALUE, 0);
-            durationField.setPromptText("Duration");
-            TextField urlField = new TextField();
-            urlField.setPromptText("URL");
-
-            grid.add(new Label("Title:"), 0, 0);
-            grid.add(titleField, 1, 0);
-            grid.add(new Label("Description:"), 0, 1);
-            grid.add(descriptionField, 1, 1);
-            grid.add(new Label("Speaker Name:"), 0, 2);
-            grid.add(speakerNameField, 1, 2);
-            grid.add(new Label("Organization:"), 0, 3);
-            grid.add(organizationField, 1, 3);
-            grid.add(new Label("Duration (min):"), 0, 4);
-            grid.add(durationField, 1, 4);
-            grid.add(new Label("URL:"), 0, 5);
-            grid.add(urlField, 1, 5);
-            dialog.getDialogPane().setContent(grid);
-
-// Add the OK and Cancel buttons to the dialog
-            ButtonType addButtonType = new ButtonType("Toevoegen", ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
-
-// Add event listener for the Add button
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == addButtonType) {
-                    String title = titleField.getText();
-                    String description = descriptionField.getText();
-                    String speakerName = speakerNameField.getText();
-                    String organization = organizationField.getText();
-                    int duration = durationField.getValue();
-                    String url = urlField.getText();
-                    Webcast newWebcast = new Webcast(title, description, speakerName, organization, duration, url);
-                    return newWebcast;
-                }
-                return null;
-            });
-
-            Optional<Webcast> result = dialog.showAndWait();
-            result.ifPresent(webcast -> {
-                // Add the new webcast to the list
-                webcastsList.add(webcast);
-
-                // Add the new webcast to the table
-                webcastTable.getItems().add(webcast);
-
-                // Refresh the table view to display the new webcast
-                webcastTable.refresh();
-
-                // Print all webcasts in the table
-                webcastTable.getItems().forEach(System.out::println);
-
-                // Print the new webcast
-                System.out.println(webcast);
-                // Scroll to the new row in the table
-                webcastTable.scrollTo(webcast);
-            });
-        });
-
-        updateButton.setOnAction(eventUpdate -> {
-// Get the selected webcast from the table
-            Webcast updateSelectedWebcast = webcastTable.getSelectionModel().getSelectedItem();
-            if (updateSelectedWebcast == null) {
-// No webcast selected, show an error message
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText(null);
-                alert.setContentText("No webcast selected.");
-                alert.showAndWait();
-                return;
-
-            }
-// Show a dialog to get the webcast information
-            Dialog<Webcast> updateDialog = new Dialog<>();
-            updateDialog.setTitle("Webcast aanpassen");
-            updateDialog.setHeaderText("Voer de nieuwe gegevens van de webcast in:");
-
-// Create the dialog content
-            GridPane updateGrid = new GridPane();
-            updateGrid.setHgap(10);
-            updateGrid.setVgap(10);
-            updateGrid.setPadding(new Insets(20, 150, 10, 10));
-
-            TextField updatedTitleField = new TextField(updateSelectedWebcast.getTitle());
-            updatedTitleField.setPromptText("Title");
-            TextArea updatedDescriptionField = new TextArea(updateSelectedWebcast.getDescription());
-            updatedDescriptionField.setPromptText("Description");
-            TextField updatedSpeakerNameField = new TextField(updateSelectedWebcast.getSpeakerName());
-            updatedSpeakerNameField.setPromptText("Speaker Name");
-            TextField updatedOrganizationField = new TextField(updateSelectedWebcast.getOrganization());
-            updatedOrganizationField.setPromptText("Organization");
-            Spinner<Integer> updatedDurationField = new Spinner<>(1, 300, updateSelectedWebcast.getDuration());
-            updatedDurationField.setEditable(true);
-            updatedDurationField.setPrefWidth(60);
-            updatedDurationField.setPromptText("Duration (min)");
-            TextField updatedUrlField = new TextField(updateSelectedWebcast.getUrl());
-            updatedUrlField.setPromptText("URL");
-
-// Add the input fields to a GridPane
-            GridPane inputGridPane = new GridPane();
-            inputGridPane.setHgap(10);
-            inputGridPane.setVgap(10);
-            inputGridPane.add(new Label("Title:"), 0, 0);
-            inputGridPane.add(updatedTitleField, 1, 0);
-            inputGridPane.add(new Label("Description:"), 0, 1);
-            inputGridPane.add(updatedDescriptionField, 1, 1);
-            inputGridPane.add(new Label("Speaker Name:"), 0, 2);
-            inputGridPane.add(updatedSpeakerNameField, 1, 2);
-            inputGridPane.add(new Label("Organization:"), 0, 3);
-            inputGridPane.add(updatedOrganizationField, 1, 3);
-            inputGridPane.add(new Label("Duration (min):"), 0, 4);
-            inputGridPane.add(updatedDurationField, 1, 4);
-            inputGridPane.add(new Label("URL:"), 0, 5);
-            inputGridPane.add(updatedUrlField, 1, 5);
-            updateDialog.getDialogPane().setContent(inputGridPane);
-
-            // Add the OK and Cancel buttons to the dialog
-            ButtonType updateOkButtonType = new ButtonType("Update", ButtonData.OK_DONE);
-            updateDialog.getDialogPane().getButtonTypes().addAll(updateOkButtonType, ButtonType.CANCEL);
-
-            // Convert the dialog result to a webcast object when the OK button is clicked
-            updateDialog.setResultConverter(dialogButton -> {
-                if (dialogButton == updateOkButtonType) {
-                    String title = updatedTitleField.getText();
-                    String description = updatedDescriptionField.getText();
-                    String speakerName = updatedSpeakerNameField.getText();
-                    String organization = updatedOrganizationField.getText();
-                    int duration = updatedDurationField.getValue();
-                    String url = updatedUrlField.getText();
-                    return new Webcast(title, description, speakerName, organization, duration, url);
-                }
-                return null;
-            });
-
-            Optional<Webcast> updateResult = updateDialog.showAndWait();
-
-            if (updateResult.isPresent()) {
-                Webcast updatedWebcast = updateResult.get();
-                if (updatedWebcast != null) {
-                    // Update the selected webcast in the table with the new information
-                    updateSelectedWebcast.setTitle(updatedWebcast.getTitle());
-                    updateSelectedWebcast.setDescription(updatedWebcast.getDescription());
-                    updateSelectedWebcast.setSpeakerName(updatedWebcast.getSpeakerName());
-                    updateSelectedWebcast.setOrganization(updatedWebcast.getOrganization());
-                    updateSelectedWebcast.setDuration(updatedWebcast.getDuration());
-                    updateSelectedWebcast.setUrl(updatedWebcast.getUrl());
-                    // Refresh the table to reflect the changes
-                    webcastTable.refresh();
-                }
-            }
-        });
-
-        deleteButton.setOnAction(ev -> {
-            // Get the selected webcast from the table
-            Webcast deleteSelectedWebcast = webcastTable.getSelectionModel().getSelectedItem();
-            if (deleteSelectedWebcast == null) {
-                // No webcast selected, show an error message
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText(null);
-                alert.setContentText("No webcast selected.");
-                alert.showAndWait();
-
-            }
-
-            // Show a confirmation dialog before deleting the webcast
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirm deletion");
-            alert.setHeaderText("Are you sure you want to delete the selected webcast?");
-            alert.setContentText(deleteSelectedWebcast.getTitle());
-
-            Optional<ButtonType> buttonResult = alert.showAndWait();
-            if (buttonResult.isPresent() && buttonResult.get() == ButtonType.OK) {
-                // Remove the selected webcast from the list and the table
-                webcastsList.remove(deleteSelectedWebcast);
-                webcastTable.getItems().remove(deleteSelectedWebcast);
-            }
-
-        });
-        return createTopThreeWebcastsPane;
     }
+
 }

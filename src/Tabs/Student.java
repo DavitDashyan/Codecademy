@@ -11,16 +11,20 @@ public class Student {
     private String email;
     private LocalDate birthDate;
     private String gender;
+    private String addres;
+   // private String postalcode;
     private String city;
     private String country;
 
-    public Student(String email, String name, LocalDate birthDate, String gender, String city, String country) {
+    public Student(String email, String name, LocalDate birthDate, String gender, String addres, 
+            String city, String country) {
         lastUsedId++;
         this.id = lastUsedId;
         this.name = name;
         this.email = email;
         this.birthDate = birthDate;
         this.gender = gender;
+        this.addres = addres;       
         this.city = city;
         this.country = country;
     }
