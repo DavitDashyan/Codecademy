@@ -10,16 +10,18 @@ package Tabs;
  * @author dashy
  */
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Application;
-import static javafx.application.Application.launch;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -92,7 +94,6 @@ public class Tabs extends Application {
 //        buttonsBox.getChildren().addAll(addButtonA, updateButtonA, deleteButtonA);
 //        //  studentsPane.setBottom(buttonsBox);
         // Tweede tab
-
         Tab topdrieCert = new Tab("Top 3 certificaten");
         VBox tab2Content = new VBox();
         tab1Content.setSpacing(10); // voeg tussenruimte toe tussen de labels
@@ -136,34 +137,54 @@ public class Tabs extends Application {
         BorderPane studentsPane = new BorderPane();
 
         TableView<Student> studentsTable = new TableView<>();
-        TableColumn<Student, Integer> idColumn = new TableColumn<>("ID");
+        // Define the columns of the table
         TableColumn<Student, String> emailColumn = new TableColumn<>("Email");
+        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+
         TableColumn<Student, String> nameColumn = new TableColumn<>("Naam");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
         TableColumn<Student, String> birthDateColumn = new TableColumn<>("Geboortedatum");
+        birthDateColumn.setCellValueFactory(cellData -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            LocalDate birthDate = cellData.getValue().getBirthDate();
+            if (birthDate != null) {
+                String formattedDate = birthDate.format(formatter);
+                property.setValue(formattedDate);
+            } else {
+                property.setValue("");
+            }
+            return property;
+        });
+
         TableColumn<Student, String> genderColumn = new TableColumn<>("Geslacht");
+        genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
+
         TableColumn<Student, String> cityColumn = new TableColumn<>("Stad");
+        cityColumn.setCellValueFactory(new PropertyValueFactory<>("city"));
+
         TableColumn<Student, String> countryColumn = new TableColumn<>("Land");
+        countryColumn.setCellValueFactory(new PropertyValueFactory<>("country"));
 
-        TableColumn<Student, Integer>[] columns = new TableColumn[]{
-            idColumn, emailColumn, nameColumn, birthDateColumn, genderColumn, cityColumn, countryColumn
-        };
+        // Add the columns to the table
+        studentsTable.getColumns().addAll(emailColumn, nameColumn, birthDateColumn, genderColumn, cityColumn, countryColumn);
 
-        studentsTable.getColumns().addAll(columns);
+        studentsPane.setCenter(studentsTable);
+
         // Define selectedStudent variable
         Student selectedStudent = null;
 
         HBox buttonsBox = new HBox();
         Button addButton = new Button("Toevoegen");
-        
-        //mooi kleurtje gegeven zodat het wat opvalt website voor de kleuren: https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html
-        addButton.setStyle("-fx-background-color: #00CED1");
         Button updateButton = new Button("Bijwerken");
         Button deleteButton = new Button("Verwijderen");
         buttonsBox.getChildren().addAll(addButton, updateButton, deleteButton);
         studentsPane.setBottom(buttonsBox);
 
         // Add event listener for adding a student
-        addButton.setOnAction(event -> {
+        addButton.setOnAction(e -> {
             // Show a dialog to get the student information
             Dialog<Student> dialog = new Dialog<>();
             dialog.setTitle("Student toevoegen");
@@ -183,9 +204,11 @@ public class Tabs extends Application {
             birthDateField.setPromptText("Geboortedatum");
             ComboBox<String> genderField = new ComboBox<>();
             genderField.getItems().addAll("Mannelijk", "Vrouwelijk", "Anders");
+
             if (selectedStudent != null) {
                 genderField.setValue(selectedStudent.getGender());
             }
+
             TextField cityField = new TextField();
             cityField.setPromptText("Stad");
             TextField countryField = new TextField();
@@ -222,7 +245,6 @@ public class Tabs extends Application {
                     return new Student(email, name, birthDate, gender, city, country);
                 }
                 return null;
-
             });
 
             Optional<Student> result = dialog.showAndWait();
@@ -232,11 +254,19 @@ public class Tabs extends Application {
                 // Add the new student to the table
                 studentsTable.getItems().add(student);
 
+                // Refresh the table view to display the new student
+                studentsTable.refresh();
+
                 // Print all students in the table
                 studentsTable.getItems().forEach(System.out::println);
+
                 // Print the new student
                 System.out.println(student);
+
+                // Scroll to the new row in the table
+                studentsTable.scrollTo(student);
             });
+
         });
 
         updateButton.setOnAction(event -> {
@@ -307,9 +337,54 @@ public class Tabs extends Application {
                     return new Student(email, name, birthDate, gender, city, country);
                 }
                 return null;
-
             });
+
+            Optional<Student> result = dialog.showAndWait();
+
+            if (result.isPresent()) {
+                // Get the updated student information from the dialog result
+                Student updatedStudent = result.get();
+                // Update the selected student in the table with the new information
+                updateSelectedStudent.setEmail(updatedStudent.getEmail());
+                updateSelectedStudent.setName(updatedStudent.getName());
+                updateSelectedStudent.setBirthDate(updatedStudent.getBirthDate());
+                updateSelectedStudent.setGender(updatedStudent.getGender());
+                updateSelectedStudent.setCity(updatedStudent.getCity());
+                updateSelectedStudent.setCountry(updatedStudent.getCountry());
+                // Refresh the table to reflect the changes
+                studentsTable.refresh();
+            }
+
         });
+
+        deleteButton.setOnAction(event -> {
+            // Get the selected student from the table
+            Student deleteSelectedStudent = studentsTable.getSelectionModel().getSelectedItem();
+            if (deleteSelectedStudent == null) {
+                // No student selected, show an error message
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Fout");
+                alert.setHeaderText(null);
+                alert.setContentText("Er is geen student geselecteerd.");
+                alert.showAndWait();
+                return;
+            }
+            // Show a confirmation dialog before deleting the student
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Bevestig verwijdering");
+            alert.setHeaderText("Weet u zeker dat u de geselecteerde student wilt verwijderen?");
+            alert.setContentText(deleteSelectedStudent.getName() + " zal worden verwijderd.");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Remove the student from the list and table
+                studentsList.remove(selectedStudent);
+                studentsTable.getItems().remove(selectedStudent);
+                // Refresh the table to reflect the changes
+                studentsTable.refresh();
+            }
+        });
+
         return studentsPane;
     }
 
